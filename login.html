@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Netflix but Good</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column; /* Added to stack items vertically */
+            background: linear-gradient(0.25turn, red, black, black, red);
+            font-family: Comic Sans MS, Comic Sans, cursive;
+        }
+
+        .login-container {
+            background: linear-gradient(black,rgba(255, 0, 0, 0.75));
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 1.0);
+        }
+
+        form {
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0; /* Added to remove default margin */
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1 style="color:white;"><center>Netflix (but we don't cancel your favorite shows)</center></h1>
+
+    <div class="login-container">
+        <form action="/interactive.js">
+            <label for="username" style="color:white;">Username:</label>
+            <input type="text" id="username" name="username"><br><br>
+            <label for="password" style="color:white;">Password:</label>
+            <input type="password" id="password" name="password"><br><br>
+            <label for="showpassword" style="color:white;">Show Password</label>
+            <input type="checkbox" id="showpassword" onclick="showPassword()"><br>
+            <input type="submit" value="Log In">
+            <input type="submit" value="Sign Up">
+        </form>
+    </div>
+
+    <script>
+        function showPassword() {
+            var x = document.getElementById("password");
+            if (x.type === "password") {
+                x.type = "text";
+            } else {
+                x.type = "password";
+            }
+        }
+    </script>
+
+</body>
+
+</html>
+
