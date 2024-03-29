@@ -52,14 +52,10 @@
     <div id="confetti-container"></div>
 
     <script>
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const msg = urlParams.get('message');
-            if (msg) {
-                document.getElementById('user_message').innerText = msg;
-                document.getElementById('user_message').style.display = 'block';
-            }
-        };
+        // Function to redirect to debug.html after x seconds
+        setTimeout(function() {
+            window.location.href = "/debug.html";
+        }, 3900);
     </script>
 
 </body>

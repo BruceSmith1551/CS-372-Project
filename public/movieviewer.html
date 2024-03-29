@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Netflix but Good</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: linear-gradient(0.25turn, rgb(255, 0, 0), black, black, rgb(255, 0, 0));
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+    
+        .container {
+            background: linear-gradient(black, rgba(255, 0, 0, 0.75));
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 1.0);
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: white;
+        }
+
+        .video-container {
+            margin-top: 20px;
+            width: 80%;
+            max-width: 800px;
+            height: 60vh;
+            max-height: 500px;
+            overflow: hidden;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+        }
+
+        .like-button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .sign-out-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="signOut()" class="sign-out-button">Sign Out</button>
+    
+    <!-- Dynamically updating title -->
+    <h1 id="videoTitle">Loading...</h1>
+
+    <div class="video-container">
+        <!-- Embedded YouTube video with dynamically updated video ID -->
+        <iframe id="videoFrame" frameborder="0" allowfullscreen></iframe>
+    </div>
+
+    <button class="like-button" id="likeButton" onclick="likeMovie()">Like</button>
+
+    <script>
+        function signOut() {
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/login.html?error=Succesfully%20Signed%20Out';
+        }
+        
+        // Function to fetch movie data from movies.json
+        async function fetchMovieData() {
+            try {
+                const response = await fetch('/movies.json');
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching movie data:', error);
+            }
+        }
+
+        // Function to update the title and video source based on movie data
+        async function updateVideoDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const videoId = urlParams.get('v');
+            const movieData = await fetchMovieData();
+
+            // Find the movie with the matching video ID
+            const movie = movieData.find(movie => extractVideoId(movie.youtubeLink) === videoId);
+
+            if (movie) {
+                document.getElementById('videoTitle').textContent = movie.name; // Update the title
+                document.getElementById('videoFrame').src = `https://www.youtube.com/embed/${videoId}`; // Update the video source
+            } else {
+                console.error('Movie not found');
+            }
+        }
+
+        // Function to extract video ID from YouTube link
+        function extractVideoId(link) {
+            const videoIdMatch = link.match(/(?:\?v=|&v=|youtu\.be\/)(.*?)(?:\?|&|$)/);
+            if (videoIdMatch && videoIdMatch[1]) {
+                return videoIdMatch[1];
+            }
+            return null;
+        }
+
+        // Function to handle the like button click
+        function likeMovie() {
+            const movieName = document.getElementById('videoTitle').textContent;
+            const likeButton = document.getElementById('likeButton');
+
+            // Disable the button to prevent multiple likes
+            likeButton.disabled = true;
+
+            // Send an request to the server to like the movie
+            fetch('/likeMovie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ movieName: movieName })
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Update the button text to indicate it's been liked
+                    likeButton.textContent = 'Liked';
+                } else {
+                    console.error('Failed to like the movie');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Call the function to update video details when the page loads
+        updateVideoDetails();
+    </script>
+</body>
+
+</html>

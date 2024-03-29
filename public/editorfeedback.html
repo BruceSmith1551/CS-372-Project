@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movies and Feedback</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: linear-gradient(0.25turn, rgb(255, 0, 0), black, black, rgb(255, 0, 0));
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: linear-gradient(black, rgba(255, 0, 0, 0.75));
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 1.0);
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .movie-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .movie-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .movie-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .movie-details {
+            flex-grow: 1;
+        }
+
+        .movie-title {
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .movie-genre {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .movie-likes {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .movie-comment {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .movie-link {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .remove-movie-form {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .remove-movie-button {
+            background-color: #f00;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-movie-button:hover {
+            background-color: #ff0000;
+        }
+
+        .back-button {
+            margin-top: 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+
+        .sign-out-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="signOut()" class="sign-out-button">Sign Out</button>
+    
+    <h1>Movies and Feedback</h1>
+    <div class="container">
+        <ul class="movie-list" id="movieList">
+            <!-- Movies dynamically added here -->
+        </ul>
+        <a href="/editorhome.html" class="back-button">Back</a>
+    </div>
+
+    <script>
+        function signOut() {
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/login.html?error=Succesfully%20Signed%20Out';
+        }
+        
+        // Fetch movie data from movies.json
+        fetch('/movies.json')
+        .then(response => response.json())
+        .then(data => {
+            const movieList = document.getElementById('movieList');
+
+            // Loop through the movie data and create elements for each movie
+            data.forEach(movie => {
+                const movieItem = document.createElement('li');
+                movieItem.classList.add('movie-item');
+
+                const movieDetails = document.createElement('div');
+                movieDetails.classList.add('movie-details');
+
+                const titleElement = document.createElement('p');
+                titleElement.classList.add('movie-title');
+                titleElement.textContent = movie.name;
+
+                const genreElement = document.createElement('p');
+                genreElement.classList.add('movie-genre');
+                genreElement.textContent = 'Genres: ' + movie.genres.join(', ');
+
+                const likesElement = document.createElement('p');
+                likesElement.classList.add('movie-likes');
+                likesElement.textContent = 'Likes: ' + movie.likes;
+
+                const commentElement = document.createElement('p');
+                commentElement.classList.add('movie-comment');
+                commentElement.textContent = 'Comment: ' + movie.comment;
+
+                const youtubeLinkElement = document.createElement('p');
+                youtubeLinkElement.classList.add('movie-link');
+                youtubeLinkElement.textContent = 'Link: ' + movie.youtubeLink;
+
+                movieDetails.appendChild(titleElement);
+                movieDetails.appendChild(genreElement);
+                movieDetails.appendChild(likesElement);
+                movieDetails.appendChild(commentElement);
+                movieDetails.appendChild(youtubeLinkElement);
+
+                const removeMovieForm = document.createElement('form');
+                removeMovieForm.classList.add('remove-movie-form');
+                removeMovieForm.action = '/removeMovie';
+                removeMovieForm.method = 'POST';
+
+                const movieNameToRemoveInput = document.createElement('input');
+                movieNameToRemoveInput.type = 'hidden';
+                movieNameToRemoveInput.name = 'movieNameToRemove';
+                movieNameToRemoveInput.value = movie.name;
+
+                const removeMovieButton = document.createElement('button');
+                removeMovieButton.classList.add('remove-movie-button');
+                removeMovieButton.type = 'submit';
+                removeMovieButton.textContent = 'Remove Movie';
+
+                removeMovieForm.appendChild(movieNameToRemoveInput);
+                removeMovieForm.appendChild(removeMovieButton);
+
+                movieItem.appendChild(movieDetails);
+                movieItem.appendChild(removeMovieForm);
+
+                movieList.appendChild(movieItem);
+        });
+    })
+    .catch(error => console.error('Error fetching movie data:', error));
+
+    </script>
+</body>
+
+</html>

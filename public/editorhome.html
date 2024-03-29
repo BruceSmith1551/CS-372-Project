@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Content Editor Dashboard</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(0.25turn, rgb(255, 0, 0), black, black, rgb(255, 0, 0));
+            font-family: Arial, sans-serif;
+        }
+
+        .form-container {
+            background: linear-gradient(black, rgba(255, 0, 0, 0.75));
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            color: white;
+        }
+
+        form {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        input[type="submit"] {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            width: calc(100% - 20px);
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        input[type="submit"] {
+            background-color: #f90;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #ffaa00;
+        }
+        .feedback-button-container {
+            text-align: center;
+        }
+
+        .feedback-button {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .feedback-button:hover {
+            background-color: #45a049;
+        }
+
+        .sign-out-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+    <button onclick="signOut()" class="sign-out-button">Sign Out</button>
+
+    <div class="form-container">
+        <h1>Add Movie</h1>
+        <form id="addMovieForm" action="/addMovie" method="POST" onsubmit="return validateForm()">
+            <label type="text" id="error_message"></label><br>
+            <label for="movieName">Movie Name:</label>
+            <input type="text" id="movieName" name="movieName" required><br>
+            <label for="genres">Genres:</label><br>
+            <div class="checkbox-grid">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="action" name="genres" value="Action">
+                    <label for="action">Action</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="comedy" name="genres" value="Comedy">
+                    <label for="comedy">Comedy</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="drama" name="genres" value="Drama">
+                    <label for="drama">Drama</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="fantasy" name="genres" value="Fantasy">
+                    <label for="fantasy">Fantasy</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="horror" name="genres" value="Horror">
+                    <label for="horror">Horror</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="romance" name="genres" value="Romance">
+                    <label for="romance">Romance</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="sci-fi" name="genres" value="Sci-Fi">
+                    <label for="sci-fi">Sci-Fi</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="thriller" name="genres" value="Thriller">
+                    <label for="thriller">Thriller</label>
+                </div>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="adventure" name="genres" value="Adventure">
+                    <label for="adventure">Adventure</label>
+                </div>
+            </div>
+            <label for="youtubeLink">YouTube Link:</label>
+            <input type="text" id="youtubeLink" name="youtubeLink" required><br>
+            <input type="submit" value="Add Movie">
+        </form>
+
+        <h1>Remove Movie</h1>
+        <form id="removeMovieForm" action="/removeMovie" method="POST">
+            <label for="movieNameToRemove">Movie Name:</label>
+            <input type="text" id="movieNameToRemove" name="movieNameToRemove" required><br>
+            <input type="submit" value="Remove Movie">
+        </form>
+
+        <div class="feedback-button-container">
+            <button class="feedback-button" onclick="redirectToFeedback()">See Manager Feedback</button>
+        </div>
+    </div>
+
+    <script>
+        function signOut() {
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/login.html?error=Succesfully%20Signed%20Out';
+        }
+
+        // Function to validate the form
+        function validateForm() {
+            // Get all checkboxes with name 'genres'
+            const checkboxes = document.querySelectorAll('input[name="genres"]:checked');
+            // Check if at least one checkbox is checked
+            if (checkboxes.length === 0) {
+                // Display error message
+                document.getElementById('error_message').innerText = "Please select at least one genre.";
+                document.getElementById('error_message').style.display = 'block';
+                // Prevent form submission
+                return false;
+            }
+            // If valid, allow form submission
+            return true;
+        }
+
+        // Function to redirect to feedback page
+        function redirectToFeedback() {
+            window.location.href = "editorfeedback.html";
+        }
+
+        // Display error message
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            if (error) {
+                document.getElementById('error_message').innerText = error;
+                document.getElementById('error_message').style.display = 'block';
+            }
+        };
+    </script>
+
+</body>
+
+</html>

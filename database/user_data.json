@@ -1,0 +1,20 @@
+[
+    {
+      "username": "br_ce",
+      "hash": "$2b$10$yVaQtaZc0obNVD82PZ.nHerOOFbfCshRehpbDa3vIvtU/t7o3q.1e",
+      "attempts": 0,
+      "role": "viewer"
+    },
+    {
+      "username": "market_",
+      "hash": "$2b$10$gGc1pSuvdJh8I5CjmXUVNuekYf7Z5qlu8ZX//l0RzwiLoNF7WLpqC",
+      "attempts": 0,
+      "role": "marketmanager"
+    },
+    {
+      "username": "content_",
+      "hash": "$2b$10$7qMS18nO4o7.mz7fBw8uh.Tqu0.k/FK9Zg.DEqlvnx6XZX8SB2MUW",
+      "attempts": 0,
+      "role": "contenteditor"
+    }
+  ]
