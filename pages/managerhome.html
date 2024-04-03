@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix but Good - Manager Home</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: linear-gradient(0.25turn, rgb(255, 0, 0), black, black, rgb(255, 0, 0));
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+    
+        .container {
+            background: linear-gradient(black, rgba(255, 0, 0, 0.75));
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 1.0);
+            padding: 20px;
+            width: 80%;
+            max-width: 800px;
+        }
+    
+        h1 {
+            color: white;
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        .movie-list {
+            list-style-type: none;
+            padding: 0;
+        }
+    
+        .movie-item {
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+    
+        .movie-item:hover {
+            background-color: #f9f9f9;
+        }
+    
+        .movie-title {
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            font-size: 20px;
+        }
+    
+        .movie-genre {
+            color: #666;
+            margin: 5px 0;
+        }
+    
+        .logo {
+            width: 300px;
+            height: auto;
+            margin-top: 20px;
+        }
+    
+        .likes {
+            color: #666;
+            margin-top: 10px;
+        }
+    
+        .comment {
+            color: #666;
+            margin-top: 10px;
+        }
+    
+        /* Style for the comment form */
+        #commentForm {
+            margin-bottom: 20px;
+        }
+    
+        #commentForm label {
+            display: block;
+            color: white;
+            margin-bottom: 5px;
+        }
+    
+        #commentForm input[type="text"],
+        #commentForm textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            background-color: #f8f8f8;
+            color: #333;
+            font-size: 16px;
+        }
+    
+        #commentForm textarea {
+            resize: vertical;
+        }
+    
+        #commentForm input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff9900;
+            color: white;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+    
+        #commentForm input[type="submit"]:hover {
+            background-color: #e98c00;
+        }
+
+        .sign-out-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .pagination-container {
+            margin-top: 20px;
+        }
+
+        .pagination-container button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-right: 5px;
+        }
+
+        .pagination-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    
+</head>
+
+<body>
+    <button onclick="signOut()" class="sign-out-button">Sign Out</button>
+    
+    <img src="/netflixbutgood.png" alt="Netflix Logo" class="logo">
+    <div class="container">
+        <form id="commentForm" action="/updateMovieComment" method="POST">
+            <label id="error_message"></label><br><br>
+            
+            <label for="movieName">Movie Name:</label>
+            <input type="text" id="movieName" name="movieName" required><br><br>
+            
+            <label for="comment">Comment:</label><br>
+            <textarea id="comment" name="comment" rows="1" cols="1" required></textarea><br><br>
+            
+            <input type="submit" value="Submit">
+        </form>
+        
+        <ul class="movie-list" id="movieList">
+            <!-- Movies dynamically added here -->
+        </ul>
+    </div>
+
+    <script>
+        function signOut() {
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/login.html?error=Succesfully%20Signed%20Out';
+        }
+        
+        const moviesPerPage = 5; // Number of movies to display per page
+        let currentPage = 1; // Current page initialized to 1
+    
+        const movieList = document.getElementById('movieList');
+    
+        // Function to display movies for the specified page
+        function displayMovies(pageNumber, moviesData) {
+            movieList.innerHTML = ''; // Clear previous movies
+            
+            // Calculate the start and end index for the current page
+            const startIndex = (pageNumber - 1) * moviesPerPage;
+            const endIndex = pageNumber * moviesPerPage;
+    
+            // Loop through the movies data for the current page
+            for (let i = startIndex; i < endIndex && i < moviesData.length; i++) {
+                const movie = moviesData[i];
+    
+                const movieItem = document.createElement('li');
+                movieItem.classList.add('movie-item');
+    
+                const movieTitle = document.createElement('h2');
+                movieTitle.classList.add('movie-title');
+                movieTitle.textContent = movie.name;
+    
+                const movieLikes = document.createElement('p');
+                movieLikes.classList.add('likes');
+                movieLikes.textContent = `Likes: ${movie.likes}`;
+    
+                const movieComment = document.createElement('p');
+                movieComment.classList.add('comment');
+                movieComment.textContent = `Comment: ${movie.comment}`;
+    
+                // Append movie details to movie item
+                movieItem.appendChild(movieTitle);
+                movieItem.appendChild(movieLikes);
+                movieItem.appendChild(movieComment);
+    
+                // Append movie item to movie list
+                movieList.appendChild(movieItem);
+            }
+        }
+    
+        // Fetch movie names, likes, and comments from the server
+        fetch('/movieNameLikesComment')
+            .then(response => response.json())
+            .then(data => {
+                const totalPages = Math.ceil(data.length / moviesPerPage); // Calculate total pages
+    
+                // Display the first page of movies initially
+                displayMovies(currentPage, data);
+    
+                // Function to handle pagination button clicks
+                function handlePaginationClick(event) {
+                    if (event.target.tagName === 'BUTTON') {
+                        const targetPage = parseInt(event.target.dataset.page);
+                        if (!isNaN(targetPage) && targetPage >= 1 && targetPage <= totalPages) {
+                            currentPage = targetPage;
+                            displayMovies(currentPage, data);
+                        }
+                    }
+                }
+    
+                // Create pagination buttons
+                const paginationContainer = document.createElement('div');
+                paginationContainer.classList.add('pagination-container');
+    
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.textContent = i;
+                    pageButton.dataset.page = i;
+                    paginationContainer.appendChild(pageButton);
+                }
+    
+                paginationContainer.addEventListener('click', handlePaginationClick);
+    
+                document.body.appendChild(paginationContainer);
+            })
+            .catch(error => console.error('Error fetching movie data:', error));
+        
+        // Get the error message from the query parameter in the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMessage = urlParams.get('error');
+    
+        // Display the error message if it exists
+        if (errorMessage) {
+            const errorMessageLabel = document.getElementById('error_message');
+            errorMessageLabel.textContent = errorMessage;
+        }
+    </script>
+</body>
+
+</html>

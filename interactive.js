@@ -21,7 +21,9 @@ const app = express();
 const fs = require('fs');
 
 app.use(cookieParser());
-//const { cookieJwtAuth } = require('./middleware/cookieJwtAuth');
+
+const mongoose = require('mongoose'); 
+mongoose.connect("mongodb://localhost:27017/database");
 
 const jwt = require('jsonwebtoken');
 
@@ -35,7 +37,57 @@ app.use(express.urlencoded({ extended: true}));
 // Generate a salt to hash the password
 const saltRounds = 10;
 
-const userDataFilePath = 'database/user_data.json';
+const Schema = mongoose.Schema;
+
+const userSchema = new Schema({
+    name: {
+        type: String,
+        require: true,
+        unique: true,
+        dropDups: true
+    },
+    attempts: {
+        type: Number,
+        require: true
+    },
+    password: {
+        type: String,
+        require: true
+    },
+    role: {
+        type: String,
+        require: true
+    }
+});
+
+const movieSchema = new Schema({
+    name: {
+        type: String,
+        require: true,
+        unique: true,
+        dropDups: true
+    },
+    link: {
+        type: String,
+        require: true
+    },
+    genre: {
+        type: String,
+        require: true
+    },
+    comment: {
+        type: String,
+        require: true
+    },
+    likes: {
+        type: Number,
+        require: true
+    }
+});
+
+const movieCollection = new mongoose.model("movies", movieSchema)
+
+const userCollection = new mongoose.model("user_data", userSchema)
 
 // Checks if a given username meets requirements
 // - at least 5 characters long
@@ -81,19 +133,102 @@ function passwordRequirements(str) {
     return true;
 }
 
-const readUserData = () => {
+async function isUsernameTaken(username) {
     try {
-        const userData = fs.readFileSync(userDataFilePath);
-        return JSON.parse(userData);
-    } catch (err) {
-        // If the file doesn't exist or is empty, return an empty array
-        return [];
+      // Count documents that have the provided username
+      const user = await userCollection.findOne({ name: username }).exec();
+      
+      // If not found, return true
+      return user !== null;
+    } 
+    catch (error) {
+        console.error('Error checking username:', error);
+        return false; // Return false if an error occurs
     }
-};
+}
 
-const writeUserData = (userData) => {
-    fs.writeFileSync(userDataFilePath, JSON.stringify(userData, null, 2));
-};
+// Function to delete a user by name
+async function deleteUser(username) {
+    try {
+        // Find the user by name
+        const user = await userCollection.findOne({ name: username });
+
+        if (!user) {
+            console.log('User not found');
+            return;
+        }
+
+        // Remove the user
+        await userCollection.deleteOne({ name: username }); 
+
+        console.log('User deleted successfully');
+    } catch (error) {
+        console.error('Error deleting user:', error);
+    }
+}
+
+async function extractFieldByName(name, fieldName) {
+    try {
+        const user = await userCollection.findOne({ name }); // Find the user by name
+        if (user) {
+            return user[fieldName]; // Return the specified field value
+        } 
+        else {
+            console.error('User not found');
+        }
+    } 
+    catch (error) {
+        console.error('Error extracting field:', error);
+        return null; // Return null if an error occurs
+    }
+}
+
+async function isMovieNameTaken(title) {
+    try {
+      // Count documents that have the provided username
+      const movie = await movieCollection.findOne({ name: title }).exec();
+      
+      // If not found, return true
+      return movie !== null;
+    } 
+    catch (error) {
+        console.error('Error checking username:', error);
+        return false; // Return false if an error occurs
+    }
+}
+
+async function isLinkTaken(thelink) {
+    try {
+      // Count documents that have the provided username
+      const movie = await movieCollection.findOne({ link: thelink }).exec();
+      
+      // If not found, return true
+      return movie !== null;
+    } 
+    catch (error) {
+        console.error('Error checking username:', error);
+        return false; // Return false if an error occurs
+    }
+}
+
+async function deleteMovie(title) {
+    try {
+        // Find the user by name
+        const movie = await movieCollection.findOne({ name: title });
+
+        if (!movie) {
+            console.log('Movie not found');
+            return;
+        }
+
+        // Remove the user
+        await movieCollection.deleteOne({ name: title }); 
+
+        console.log('Movie deleted successfully');
+    } catch (error) {
+        console.error('Error deleting user:', error);
+    }
+}
 
 // Served as default as this '.get' comes first, basically the root
 app.get('/', (req, res) => {
@@ -110,49 +245,65 @@ app.get('/getErrorMessage', (req, res) => {
 
 // Essentially 'serving' the HTML form
 app.get('/login.html', (req, res) => {
-	res.sendFile(path.join(__dirname, 'public', '/login.html'));
+	res.sendFile(path.join(__dirname, 'pages', '/login.html'));
 });
 
-app.get('/welcome', authenticateToken, (req, res) => {
-    const username = req.user.username; // For user data extraction
+app.get('/welcome.html', authenticateToken, (req, res) => {
     const role = req.user.role;
-    if (role == 'viewer') res.redirect('/viewerhome');
-    else if (role == 'contenteditor') res.redirect('/editorhome');
-    else if (role == 'marketmanager') res.redirect('/managerhome');
+    if (role == 'viewer') res.redirect('/viewerhome.html');
+    else if (role == 'contenteditor') res.redirect('/editorhome.html');
+    else if (role == 'marketmanager') res.redirect('/managerhome.html');
     //res.sendFile(path.join(__dirname, 'public', '/welcome.html'));
 });
 
-app.get('/viewerhome', authenticateToken, (req, res) => {
-    const username = req.user.username; // For user data extraction
+app.get('/viewerhome.html', authenticateToken, (req, res) => {
     const role = req.user.role;
     if (role != 'viewer')
     {
-        if (role == 'contenteditor') res.redirect("/editorhome");
-        else if (role == 'marketmanager') res.redirect("/managerhome");
+        if (role == 'contenteditor') return res.redirect("/editorhome.html");
+        else if (role == 'marketmanager') return res.redirect("/managerhome.html");
     }
-    res.sendFile(path.join(__dirname, 'public', '/viewerhome.html'));
+    res.sendFile(path.join(__dirname, 'pages', '/viewerhome.html'));
 });
 
-app.get('/editorhome', authenticateToken, (req, res) => {
-    const username = req.user.username; // For user data extraction
+app.get('/movieviewer.html', authenticateToken, (req, res) => {
+    const role = req.user.role;
+    if (role != 'viewer')
+    {
+        if (role == 'contenteditor') return res.redirect("/editorhome.html");
+        else if (role == 'marketmanager') return res.redirect("/managerhome.html");
+    }
+    res.sendFile(path.join(__dirname, 'pages', '/movieviewer.html'));
+});
+
+app.get('/editorhome.html', authenticateToken, (req, res) => {
     const role = req.user.role;
     if (role != 'contenteditor')
     {
-        if (role == 'viewer') res.redirect("/viewerhome");
-        else if (role == 'marketmanager') res.redirect("/managerhome");
+        if (role == 'viewer') return res.redirect("/viewerhome.html");
+        else if (role == 'marketmanager') return res.redirect("/managerhome.html");
     }
-    res.sendFile(path.join(__dirname, 'public', '/editorhome.html'));
+    res.sendFile(path.join(__dirname, 'pages', '/editorhome.html'));
 });
 
-app.get('/managerhome', authenticateToken, (req, res) => {
-    const username = req.user.username; // For user data extraction
+app.get('/managerhome.html', authenticateToken, (req, res) => {
     const role = req.user.role;
     if (role != 'marketmanager')
     {
-        if (role == 'viewer') res.redirect("/viewerhome");
-        else if (role == 'contenteditor') res.redirect("/editorhome");
+        if (role == 'viewer') return res.redirect("/viewerhome.html");
+        else if (role == 'contenteditor') return res.redirect("/editorhome.html");
     }
-    res.sendFile(path.join(__dirname, 'public', '/managerhome.html'));
+    res.sendFile(path.join(__dirname, 'pages', '/managerhome.html'));
+});
+
+app.get('/editorfeedback.html', authenticateToken, (req, res) => {
+    const role = req.user.role;
+    if (role != 'contenteditor')
+    {
+        if (role == 'viewer') return res.redirect("/viewerhome.html");
+        else if (role == 'marketmanager') return res.redirect("/managerhome.html");
+    }
+    res.sendFile(path.join(__dirname, 'pages', '/editorfeedback.html'));
 });
 
 /*
@@ -169,7 +320,7 @@ app.get('/movies.json', (req, res) => {
 });
 
 // Recieving data from forms, posts to 'interactive.js'
-app.post('/interactive.js', (req, res) => {
+app.post('/interactive.js', async (req, res) => {
     const { username, password, action } = req.body;
 
     // SIGN UP REQUEST
@@ -178,23 +329,27 @@ app.post('/interactive.js', (req, res) => {
         console.log('Username:', username);
         console.log('Password:', password);
 
-        const userData = readUserData();
-        const existingUser = userData.find(user => user.username === username);
+        nameExists = await isUsernameTaken(username);
 
-        // UNSUCCESSFUL SIGN UP: user already exists
-        if (existingUser) {
+        // USER EXISTS
+        if (nameExists)
+        {
             console.log('User already exists');
             res.redirect('/login.html?error=⚠️User%20already%20exists%20⚠️');
         }
         // USER DOESN'T EXIST
-        else {
+        else
+        {
             // Checks if username meets requiremetns, if so, create user
             if (usernameRequirements(username) && passwordRequirements(password)) {
-
                 bcrypt.hash(password, saltRounds, (err, hash) => {
-                    const user = { username, hash, attempts : 0, role : "viewer"};
-                    userData.push(user);
-                    writeUserData(userData);
+                    const newuser = new userCollection({ 
+                        name: username, 
+                        attempts: 0, 
+                        password: hash, 
+                        role: "viewer"
+                    })
+                    newuser.save() 
                 });
 
                 console.log('User successfully created');
@@ -206,99 +361,89 @@ app.post('/interactive.js', (req, res) => {
                     //httpOnly: true,
                 });
                 // Redirect to the welcome.html page after successful sign-up
-                res.redirect('/welcome');
+                res.redirect('/welcome.html');
             }
             // If user doesn't meet both username and password requirements signal error
             else if(!usernameRequirements(username) && !passwordRequirements(password)) {
                 console.log('Bad username and password detected');
                 res.redirect('/login.html?error=⚠️Bad%20username%20and%20password%20detected⚠️');
             }
-			// If user doesn't meet username requirements signal error
+            // If user doesn't meet username requirements signal error
             else if(!usernameRequirements(username)) {
                 console.log('Bad username detected');
                 res.redirect('/login.html?error=⚠️Bad%20username%20detected⚠️');
             }
-			// If user doesn't meet password requirements signal error
+            // If user doesn't meet password requirements signal error
             else if(!passwordRequirements(password)) {
                 console.log('Bad password detected');
                 res.redirect('/login.html?error=⚠️Bad%20password%20detected⚠️');
             }
-			// Backup error if the user somehow bypasses all other errors
+            // Backup error if the user somehow bypasses all other errors
             else {
                 console.log('Bad username and/or password detected');
                 res.redirect('/login.html?error=⚠️Bad%20username/password%20detected⚠️');
             }
-        }
-
+    }
     // LOG IN REQUEST
-} else if (action === 'log in') {
-    console.log('Log in Request:');
-    console.log('Username:', username);
-    console.log('Password:', password);
+    } 
+    else if (action === 'log in') {
+        console.log('Log in Request:');
+        console.log('Username:', username);
+        console.log('Password:', password);
 
-    const userData = readUserData();
-    const user = userData.find(user => user.username === username);
+        const nameExists = await isUsernameTaken(username);
 
-    if (!user) {
-        console.log('Invalid username');
-        res.redirect('/login.html?error=⚠️Invalid%20username⚠️');
-    } else {
-        bcrypt.compare(password, user.hash, (err, result) => {
-            if (err) {
-                // Error occurred while comparing passwords
-                console.error('Error occurred while comparing passwords:', err);
-                return res.redirect('/login.html?error=⚠️An%20error%20occurred.%20Please%20try%20again⚠️');
-            }
+        if (!nameExists) {
+            console.log('Invalid username');
+            res.redirect('/login.html?error=⚠️Invalid%20username⚠️');
+        } 
+        else {
+            const currentPassword = await extractFieldByName(username, 'password');
+            const currentRole = await extractFieldByName(username, 'role');
+            
+            const result = await bcrypt.compare(password, currentPassword);
+
             if (!result) {
-                user.attempts = (user.attempts || 0) + 1;
-
-                console.log('Attempts:', user.attempts);
-                if (user.attempts >= 5) {
-                    // If attempts reach 5 or more, remove the user
-                    userData.splice(userData.findIndex(u => u.username === username), 1);
-                    writeUserData(userData);
-                    console.log('User deleted due to 5 or more login attempts');
+                await userCollection.findOneAndUpdate(
+                    { name: username },
+                    { $inc: { attempts: 1 } },
+                    { new: true }
+                );
+    
+                //const user = await userCollection.findOne({ username });
+                const currentAttempts = await extractFieldByName(username, 'attempts');
+                console.log('Attempts:', currentAttempts)
+                if (currentAttempts >= 5) {
+                    await deleteUser(username);
+                    console.log(username, ' deleted due to 5 or more login attempts');
                     return res.redirect('/login.html?error=⚠️Account%20deleted%20due%20to%205%20or%20more%20login%20attempts⚠️');
                 }
-                // Update attempts in userData array
-                writeUserData(userData);
-
+    
                 console.log('Invalid password');
-                return res.redirect(`/login.html?error=⚠️Invalid%20password.%20Failed%20Attempts:%20${user.attempts}⚠️`);
+                return res.redirect(`/login.html?error=⚠️Invalid%20password.%20Failed%20Attempts:%20${currentAttempts}⚠️`);
             }
 
-            console.log('User successfully logged in');
+                console.log('User successfully logged in');
 
-            const userTokenInfo = { username: user.username, role: user.role };
-            const token = jwt.sign(userTokenInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+                const userTokenInfo = { username: username, role: currentRole };
+                const token = jwt.sign(userTokenInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
-            res.cookie('token', token, {
-                //httpOnly: true,
-            });
+                res.cookie('token', token, {
+                    //httpOnly: true,
+                });
 
-            // Redirect to the welcome.html page after successful login
-            return res.redirect('/welcome');
-        });
+                // Redirect to the welcome.html page after successful login
+                return res.redirect('/welcome.html');
+        }
     }
-}
 });
 
 // Endpoint to handle adding a movie
-app.post('/addMovie', (req, res) => {
-    const { movieName, youtubeLink, genres } = req.body;
+app.post('/addMovie', async (req, res) => {
+    const { movieName, youtubeLink, genre } = req.body;
 
-    // Read the existing movies data
-    const moviesFilePath = path.join(__dirname, 'database', 'movies.json');
-    let movies = [];
-    try {
-        movies = JSON.parse(fs.readFileSync(moviesFilePath));
-    } catch (error) {
-        console.error('Error reading movies file:', error);
-    }
-
-    // Check if the movie name or link already exists
-    const isDuplicateName = movies.some(movie => movie.name === movieName);
-    const isDuplicateLink = movies.some(movie => movie.youtubeLink === youtubeLink);
+    const isDuplicateName = await isMovieNameTaken(movieName);
+    const isDuplicateLink = await isLinkTaken(youtubeLink);
 
     if (isDuplicateName && isDuplicateLink) {
         console.log('Duplicate movie name and link detected');
@@ -310,155 +455,166 @@ app.post('/addMovie', (req, res) => {
         console.log('Duplicate YouTube link detected');
         res.redirect('/editorhome.html?error=Duplicate%20YouTube%20link%20detected');
     } else {
-        // Convert genres to an array if it's not already one to ensure it works with various functions
-        const genresArray = Array.isArray(genres) ? genres : [genres];
 
-        // Create a JSON object with the movie data including selected genres
-        const movieData = {
-            name: movieName,
-            youtubeLink: youtubeLink,
-            genres: genresArray,
-            comment: '', 
+        const newMovie = new movieCollection({ 
+            name: movieName, 
+            link: youtubeLink, 
+            genre: genre,
+            comment: '',
             likes: 0
-        };
+        })
 
-        // Add the movie data to the movies array
-        movies.push(movieData);
-
-        // Write the updated movies data to the JSON file
-        fs.writeFile(moviesFilePath, JSON.stringify(movies, null, 2), err => {
-            if (err) {
-                console.error('Error writing movies file:', err);
-                res.status(500).send('Internal server error');
-            } else {
-                console.log('Movie added:', movieData);
-                res.redirect('/editorhome.html?error=Movie%20added%20successfully');
-            }
-        });
+        newMovie.save();
+        console.log('Movie added:', movieName);
+        res.redirect('/editorhome.html?error=Movie%20added%20successfully');
     }
 });
 
 // Endpoint to handle removing a movie
-app.post('/removeMovie', (req, res) => {
+app.post('/removeMovie', async (req, res) => {
     const movieNameToRemove = req.body.movieNameToRemove;
 
-    // Read the existing movies data
-    const moviesFilePath = path.join(__dirname, 'database', 'movies.json');
-    let movies = [];
-    try {
-        movies = JSON.parse(fs.readFileSync(moviesFilePath));
-    } catch (error) {
-        console.error('Error reading movies file:', error);
-    }
-
-    // Check if the movie to remove exists
-    const movieExists = movies.some(movie => movie.name === movieNameToRemove);
+    const movieExists = await isMovieNameTaken(movieNameToRemove);
 
     if (!movieExists) {
         console.log('Movie not found');
         res.redirect('/editorhome.html?error=Movie%20not%20found');
-    } else {
-        // Filter out the movie to remove
-        const updatedMovies = movies.filter(movie => movie.name !== movieNameToRemove);
-
-        // Write the updated movie data to the JSON file
-        fs.writeFile(moviesFilePath, JSON.stringify(updatedMovies, null, 2), err => {
-            if (err) {
-                console.error('Error writing movies file:', err);
-                res.status(500).send('Internal server error');
-            } else {
-                console.log('Movie removed:', movieNameToRemove);
-                res.redirect('/editorhome.html?error=Movie%20removed%20successfully');
-            }
-        });
+    } 
+    else 
+    {
+        await deleteMovie(movieNameToRemove);
+        console.log(movieNameToRemove, ' has been removed');
+        res.redirect('/editorhome.html?error=Movie%20removed%20successfully');
     }
 });
 
-// Function to extract video ID from YouTube link
-function extractVideoId(link) {
-    const videoIdMatch = link.match(/(?:\?v=|&v=|youtu\.be\/)(.*?)(?:\?|&|$)/);
-    if (videoIdMatch && videoIdMatch[1]) {
-        return videoIdMatch[1];
-    }
-    return null;
-}
-
 // Endpoint to handle liking a movie
-app.post('/likeMovie', (req, res) => {
+app.post('/likeMovie', async (req, res) => {
     const movieName = req.body.movieName;
-    
-    // Read the existing movies data
-    const moviesFilePath = path.join(__dirname, 'database', 'movies.json');
-    let movies = [];
-    try {
-        movies = JSON.parse(fs.readFileSync(moviesFilePath));
-    } catch (error) {
-        console.error('Error reading movies file:', error);
-        res.status(500).send('Internal server error');
-        return;
-    }
 
-    // Find the movie by name
-    const movie = movies.find(movie => movie.name === movieName);
+    const movieExists = isMovieNameTaken(movieName);
 
-    if (!movie) {
+    if (!movieExists) {
         console.log('Movie not found');
         res.status(404).send('Movie not found');
         return;
     }
 
     // Increment the likes counter
-    movie.likes++;
+    await movieCollection.findOneAndUpdate(
+        { name: movieName },
+        { $inc: { likes: 1 } },
+        { new: true }
+    );
+    console.log('Movie liked:', movieName);
+    res.status(200).send('Movie liked successfully');
+});
 
-    // Write the updated movie data to the JSON file
-    fs.writeFile(moviesFilePath, JSON.stringify(movies, null, 2), err => {
-        if (err) {
-            console.error('Error writing movies file:', err);
-            res.status(500).send('Internal server error');
+// Add a new endpoint to retrieve all movies from the MongoDB collection
+app.get('/allMovies', async (req, res) => {
+    try {
+        // Find all movies in the collection
+        const allMovies = await movieCollection.find();
+
+        // Send the array of movie data as the response
+        res.json(allMovies);
+    } catch (error) {
+        console.error('Error fetching all movie data:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// Add a new endpoint to retrieve only movie names and genres from the MongoDB collection
+app.get('/movieNamesAndGenres', async (req, res) => {
+    try {
+        // Find all movies in the collection, but only project the name and genre fields
+        const movies = await movieCollection.find({}, { name: 1, genre: 1, _id: 0 });
+
+        // Send the array of movie data as the response
+        res.json(movies);
+    } catch (error) {
+        console.error('Error fetching movie data:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// Add a new endpoint to retrieve movie names, likes, and comments from the MongoDB collection
+app.get('/movieNameLikesComment', async (req, res) => {
+    try {
+        // Find all movies in the collection and project the name, likes, and comment fields
+        const movies = await movieCollection.find({}, { name: 1, likes: 1, comment: 1, _id: 0 });
+
+        // Send the array of movie data as the response
+        res.json(movies);
+    } catch (error) {
+        console.error('Error fetching movie data:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+// Add a new endpoint to retrieve movie names, genres, comments, and links from the MongoDB collection
+app.get('/getMovieNameGenreCommentLink', async (req, res) => {
+    try {
+        // Find all movies in the collection and project the name, genre, comment, and link fields
+        const movies = await movieCollection.find({}, { name: 1, genre: 1, comment: 1, link: 1, _id: 0 });
+
+        // Send the array of movie data as the response
+        res.json(movies);
+    } catch (error) {
+        console.error('Error fetching movie data:', error);
+        res.status(500).send('Internal server error');
+    }
+});
+
+
+// Add a new endpoint to retrieve movie by name from the MongoDB collection
+app.get('/getMovieByName', async (req, res) => {
+    const movieName = req.query.name;
+
+    try {
+        // Find the movie by name in the collection
+        const movie = await movieCollection.findOne({ name: movieName });
+
+        if (movie) {
+            // Send the movie data as the response
+            res.json(movie);
         } else {
-            console.log('Movie liked:', movieName);
-            res.status(200).send('Movie liked successfully');
+            console.error('Movie not found');
+            res.status(404).send('Movie not found');
         }
-    });
+    } catch (error) {
+        console.error('Error fetching movie data:', error);
+        res.status(500).send('Internal server error');
+    }
 });
 
 // Endpoint to handle updating movie comment
-app.post('/updateComment', (req, res) => {
-    const updatedMovie = req.body;
-    
-    // Read the existing movies data
-    const moviesFilePath = path.join(__dirname, 'database', 'movies.json');
-    let movies = [];
+app.post('/updateMovieComment', async (req, res) => {
+    const { movieName, comment } = req.body;
+
     try {
-        movies = JSON.parse(fs.readFileSync(moviesFilePath));
-    } catch (error) {
-        console.error('Error reading movies file:', error);
-        res.status(500).send('Internal server error');
-        return;
-    }
+        // Check if the movie exists in the collection
+        const existingMovie = await movieCollection.findOne({ name: movieName });
 
-    // Find the index of the movie to update
-    const index = movies.findIndex(movie => movie.name === updatedMovie.name);
-    
-    if (index === -1) {
-        console.error('Movie not found');
-        res.status(404).send('Movie not found');
-        return;
-    }
-
-    // Update the movie comment
-    movies[index].comment = updatedMovie.comment;
-
-    // Write the updated movie data to the JSON file
-    fs.writeFile(moviesFilePath, JSON.stringify(movies, null, 2), err => {
-        if (err) {
-            console.error('Error writing movies file:', err);
-            res.status(500).send('Internal server error');
-        } else {
-            console.log('Movie comment updated:', updatedMovie.name);
-            res.status(200).send('Movie comment updated successfully');
+        if (!existingMovie) {
+            // If the movie doesn't exist, return an error
+            console.log('Movie does not exist:', movieName);
+            return res.redirect('/managerhome.html?error=Movie%20does%20not%20exist');
         }
-    });
+
+        // Update the comment field of the existing movie
+        await movieCollection.findOneAndUpdate(
+            { name: movieName },
+            { $set: { comment: comment } },
+            { new: true }
+        );
+
+        console.log('Movie comment updated:', movieName);
+        res.redirect('/managerhome.html?error=Movie%20comment%20updated%20successfully');
+    } catch (error) {
+        console.error('Error updating movie comment:', error);
+        res.redirect('/managerhome.html?error=Error%20updating%20movie%20comment');
+    }
 });
 
 function authenticateToken(req, res, next)

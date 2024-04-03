@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Content Editor Dashboard</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(0.25turn, rgb(255, 0, 0), black, black, rgb(255, 0, 0));
+            font-family: Arial, sans-serif;
+        }
+
+        .form-container {
+            background: linear-gradient(black, rgba(255, 0, 0, 0.75));
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5);
+            width: 400px;
+            color: white;
+        }
+
+        form {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: white;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"],
+        select,
+        input[type="submit"] {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            width: calc(100% - 20px);
+        }
+
+        input[type="submit"] {
+            background-color: #f90;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #ffaa00;
+        }
+
+        .feedback-button-container {
+            text-align: center;
+        }
+
+        .feedback-button {
+            margin-top: 20px;
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .feedback-button:hover {
+            background-color: #45a049;
+        }
+
+        .sign-out-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-decoration: none;
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+    <button onclick="signOut()" class="sign-out-button">Sign Out</button>
+
+    <div class="form-container">
+        <h1>Add Movie</h1>
+        <form id="addMovieForm" onsubmit="return submitForm()">
+            <label type="text" id="error_message"></label><br>
+            <label for="movieName">Movie Name:</label>
+            <input type="text" id="movieName" name="movieName" required><br>
+            <label for="genre">Genre:</label><br>
+            <select id="genre" name="genre" required>
+                <option value="">Select a genre</option>
+                <option value="Action">Action</option>
+                <option value="Comedy">Comedy</option>
+                <option value="Drama">Drama</option>
+                <option value="Fantasy">Fantasy</option>
+                <option value="Horror">Horror</option>
+                <option value="Romance">Romance</option>
+                <option value="Sci-Fi">Sci-Fi</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Adventure">Adventure</option>
+            </select><br>
+            <label for="youtubeLink">YouTube Link:</label>
+            <input type="text" id="youtubeLink" name="youtubeLink" required><br>
+            <input type="submit" value="Add Movie">
+        </form>
+
+        <h1>Remove Movie</h1>
+        <form id="removeMovieForm" action="/removeMovie" method="POST">
+            <label for="movieNameToRemove">Movie Name:</label>
+            <input type="text" id="movieNameToRemove" name="movieNameToRemove" required><br>
+            <input type="submit" value="Remove Movie">
+        </form>
+
+        <div class="feedback-button-container">
+            <button class="feedback-button" onclick="redirectToFeedback()">See Manager Feedback</button>
+        </div>
+    </div>
+
+    <script>
+        function signOut() {
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/login.html?error=Succesfully%20Signed%20Out';
+        }
+
+        function validateForm() {
+            const genre = document.getElementById('genre').value;
+            if (!genre) {
+                document.getElementById('error_message').innerText = "Please select a genre.";
+                document.getElementById('error_message').style.display = 'block';
+                return false;
+            }
+            return true;
+        }
+
+        function redirectToFeedback() {
+            window.location.href = "editorfeedback.html";
+        }
+
+        window.onload = function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            if (error) {
+                document.getElementById('error_message').innerText = error;
+                document.getElementById('error_message').style.display = 'block';
+            }
+        };
+
+        function submitForm() {
+            const movieName = document.getElementById('movieName').value;
+            const youtubeLink = document.getElementById('youtubeLink').value;
+            const genre = document.getElementById('genre').value;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '/addMovie');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    window.location.href = '/editorhome.html?error=Movie%20added%20successfully';
+                } else {
+                    console.error('Error:', xhr.responseText);
+                }
+            };
+
+            xhr.send(JSON.stringify({ movieName, youtubeLink, genre }));
+
+            return false;
+        }
+    </script>
+</body>
+
+
+</html>
