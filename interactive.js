@@ -76,7 +76,8 @@ const movieSchema = new Schema({
         require: true
     },
     comment: {
-        type: String,
+        //type: String,
+        type: Array,
         require: true
     },
     likes: {
@@ -162,7 +163,8 @@ async function deleteUser(username) {
         await userCollection.deleteOne({ name: username }); 
 
         console.log('User deleted successfully');
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error deleting user:', error);
     }
 }
@@ -225,7 +227,8 @@ async function deleteMovie(title) {
         await movieCollection.deleteOne({ name: title }); 
 
         console.log('Movie deleted successfully');
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error deleting user:', error);
     }
 }
@@ -422,18 +425,17 @@ app.post('/interactive.js', async (req, res) => {
                 console.log('Invalid password');
                 return res.redirect(`/login.html?error=⚠️Invalid%20password.%20Failed%20Attempts:%20${currentAttempts}⚠️`);
             }
+            console.log('User successfully logged in');
 
-                console.log('User successfully logged in');
+            const userTokenInfo = { username: username, role: currentRole };
+            const token = jwt.sign(userTokenInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
 
-                const userTokenInfo = { username: username, role: currentRole };
-                const token = jwt.sign(userTokenInfo, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.cookie('token', token, {
+                //httpOnly: true,
+            });
 
-                res.cookie('token', token, {
-                    //httpOnly: true,
-                });
-
-                // Redirect to the welcome.html page after successful login
-                return res.redirect('/welcome.html');
+            // Redirect to the welcome.html page after successful login
+            return res.redirect('/welcome.html');
         }
     }
 });
@@ -448,13 +450,16 @@ app.post('/addMovie', async (req, res) => {
     if (isDuplicateName && isDuplicateLink) {
         console.log('Duplicate movie name and link detected');
         res.redirect('/editorhome.html?error=Duplicate%20movie%20name%20and%20link%20detected');
-    } else if (isDuplicateName) {
+    } 
+    else if (isDuplicateName) {
         console.log('Duplicate movie name detected');
         res.redirect('/editorhome.html?error=Duplicate%20movie%20name%20detected');
-    } else if (isDuplicateLink) {
+    } 
+    else if (isDuplicateLink) {
         console.log('Duplicate YouTube link detected');
         res.redirect('/editorhome.html?error=Duplicate%20YouTube%20link%20detected');
-    } else {
+    } 
+    else {
 
         const newMovie = new movieCollection({ 
             name: movieName, 
@@ -518,7 +523,8 @@ app.get('/allMovies', async (req, res) => {
 
         // Send the array of movie data as the response
         res.json(allMovies);
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error fetching all movie data:', error);
         res.status(500).send('Internal server error');
     }
@@ -532,7 +538,8 @@ app.get('/movieNamesAndGenres', async (req, res) => {
 
         // Send the array of movie data as the response
         res.json(movies);
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error fetching movie data:', error);
         res.status(500).send('Internal server error');
     }
@@ -546,7 +553,8 @@ app.get('/movieNameLikesComment', async (req, res) => {
 
         // Send the array of movie data as the response
         res.json(movies);
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error fetching movie data:', error);
         res.status(500).send('Internal server error');
     }
@@ -560,7 +568,8 @@ app.get('/getMovieNameGenreCommentLink', async (req, res) => {
 
         // Send the array of movie data as the response
         res.json(movies);
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error fetching movie data:', error);
         res.status(500).send('Internal server error');
     }
@@ -578,11 +587,13 @@ app.get('/getMovieByName', async (req, res) => {
         if (movie) {
             // Send the movie data as the response
             res.json(movie);
-        } else {
+        } 
+        else {
             console.error('Movie not found');
             res.status(404).send('Movie not found');
         }
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error fetching movie data:', error);
         res.status(500).send('Internal server error');
     }
@@ -605,13 +616,14 @@ app.post('/updateMovieComment', async (req, res) => {
         // Update the comment field of the existing movie
         await movieCollection.findOneAndUpdate(
             { name: movieName },
-            { $set: { comment: comment } },
+            { $push: { comment: comment } },
             { new: true }
         );
 
         console.log('Movie comment updated:', movieName);
         res.redirect('/managerhome.html?error=Movie%20comment%20updated%20successfully');
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Error updating movie comment:', error);
         res.redirect('/managerhome.html?error=Error%20updating%20movie%20comment');
     }
