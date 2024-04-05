@@ -123,6 +123,10 @@
             <button onclick="filterMovies('adventure')">Adventure</button>
             <button onclick="resetFilter()">Show All</button>
         </div>
+        
+        <!-- Search bar -->
+        <input type="text" id="searchInput" oninput="searchMovies()" placeholder="Search by name...">
+        
         <ul class="movie-list" id="movieList">
             <!-- Movies dynamically added here -->
         </ul>
@@ -152,6 +156,21 @@
             const movieItems = document.querySelectorAll('.movie-item');
             movieItems.forEach(item => {
                 item.style.display = 'block';
+            });
+        }
+
+        // Function to search movies by name
+        function searchMovies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const movieItems = document.querySelectorAll('.movie-item');
+            
+            movieItems.forEach(item => {
+                const title = item.querySelector('.movie-title').textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
             });
         }
 
@@ -189,5 +208,3 @@
             .catch(error => console.error('Error fetching movie data:', error));
     </script>
 </body>
-
-</html>
