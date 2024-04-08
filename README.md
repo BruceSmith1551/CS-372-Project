@@ -54,7 +54,7 @@ npm install express cookie-parser mongodb mongoose jsonwebtoken dotenv bcrypt
   ```
 
 8. **Run the Application:**
-- In the directory where the website files (not database, the .js and .html files) are stored
+- Navigate to the directory containing the interactive.js file and run the following command:
 ```
 node interactive.js
 ```
