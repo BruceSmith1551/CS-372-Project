@@ -60,4 +60,4 @@ node interactive.js
 Open a web browser and navigate to `http://localhost:8080`.
 
 ## Notes for Admins
-- To change a user's role to 'viewer', the admin must manually update the user's role in the MongoDB database. This functionality is not exposed through the website interface and requires direct manipulation of the database records.
+- To change a user's role to a viewer, content editor, or marketing manager, the admin must manually update the user's role in the MongoDB database and type either `viewer`, `contenteditor`, and `marketmanager`. This functionality is not exposed through the website interface and requires direct manipulation of the database records.
