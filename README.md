@@ -14,6 +14,9 @@
 ## Setup Instructions
 To set up the website, follow these instructions:
 
+0. **Install Node.js:**
+   - If you haven't already installed Node.js on your system, you can download and install it from the [official Node.js website](https://nodejs.org/).
+
 1. **Clone the Repository:**
 ```
 git clone <repository_url>
