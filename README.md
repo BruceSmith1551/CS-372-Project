@@ -62,7 +62,7 @@ node interactive.js
 9. **Access the Website:**
 Open a web browser and navigate to `http://localhost:8080`.
 
-## Notes for Viewers
+## Notes for creating an account
 - Username Requirements:
   - At least 5 characters long
   - Needs one underscore '_' but cannot be at the very beginning of a username (i.e '_abcd' is not allowed)
