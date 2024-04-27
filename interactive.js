@@ -1,7 +1,7 @@
 // interactive.js
 // 2024-03-29
 
-// Handles interactions between html and 'database'
+// Handles interactions between html and 'netflix_but_good' database
 //
 // To initalize workspace, do 'npm init -y'
 // To use Express, install it via 'npm install express'
@@ -23,7 +23,7 @@ const fs = require('fs');
 app.use(cookieParser());
 
 const mongoose = require('mongoose'); 
-mongoose.connect("mongodb://localhost:27017/database");
+mongoose.connect("mongodb://localhost:27017/netflix_but_good");
 
 const jwt = require('jsonwebtoken');
 
@@ -318,7 +318,7 @@ app.get('/PLACEHOLDER', authenticateToken, (req, res) => {
 */
 
 app.get('/movies.json', (req, res) => {
-    const moviesFilePath = path.join(__dirname, 'database', 'movies.json');
+    const moviesFilePath = path.join(__dirname, 'netflix_but_good', 'movies.json');
     res.sendFile(moviesFilePath);
 });
 
