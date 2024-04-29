@@ -2,14 +2,6 @@
 // 2024-03-29
 
 // Handles interactions between html and 'netflix_but_good' database
-//
-// To initalize workspace, do 'npm init -y'
-// To use Express, install it via 'npm install express'
-// To use Cookie Parser, install it via 'npm install cookie-parser'
-// To use MongoDB, install it via 'npm install mongodb'
-// To use JSON Web Tokens, install it via 'npm install jsonwebtoken'
-// To use .env files, install it via 'npm install dotenv'
-// To use bcrypt, install it via 'npm install bcrypt'
 
 const PORT = 8080; // Easier to change if need be
 
@@ -493,6 +485,7 @@ app.post('/removeMovie', async (req, res) => {
     }
 });
 
+// For viewer, like movie
 // Endpoint to handle liking a movie
 app.post('/likeMovie', async (req, res) => {
     const movieName = req.body.movieName;
@@ -515,6 +508,7 @@ app.post('/likeMovie', async (req, res) => {
     res.status(200).send('Movie liked successfully');
 });
 
+// For viewer, used when 'All' genre button is pressed
 // Add a new endpoint to retrieve all movies from the MongoDB collection
 app.get('/allMovies', async (req, res) => {
     try {
@@ -530,6 +524,7 @@ app.get('/allMovies', async (req, res) => {
     }
 });
 
+// For viewer, when selecting a genre, or searching by name
 // Add a new endpoint to retrieve only movie names and genres from the MongoDB collection
 app.get('/movieNamesAndGenres', async (req, res) => {
     try {
@@ -545,6 +540,7 @@ app.get('/movieNamesAndGenres', async (req, res) => {
     }
 });
 
+// For marketing manager, upon entering
 // Add a new endpoint to retrieve movie names, likes, and comments from the MongoDB collection
 app.get('/movieNameLikesComment', async (req, res) => {
     try {
@@ -560,6 +556,7 @@ app.get('/movieNameLikesComment', async (req, res) => {
     }
 });
 
+// For content editor when pressing 'See Manager Feedback'
 // Add a new endpoint to retrieve movie names, genres, comments, and links from the MongoDB collection
 app.get('/getMovieNameGenreCommentLink', async (req, res) => {
     try {
@@ -575,7 +572,7 @@ app.get('/getMovieNameGenreCommentLink', async (req, res) => {
     }
 });
 
-
+// For viewer, when clicking on movie
 // Add a new endpoint to retrieve movie by name from the MongoDB collection
 app.get('/getMovieByName', async (req, res) => {
     const movieName = req.query.name;
